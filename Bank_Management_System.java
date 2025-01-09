@@ -1,6 +1,8 @@
 package Projects;
 import java.io.*;
 import java.util.*;
+import java.io.Serializable;
+
 class BankAccount implements Serializable {
     private static final long serialVersionUID = 1L;
     private String accountNumber;
@@ -43,7 +45,7 @@ class BankAccount implements Serializable {
         if (amount > 0 && amount <= balance) {
             balance -= amount;
         } else {
-            throw new IllegalArgumentException("Invalid withdrawal amount.");
+            throw new IllegalArgumentException("Insufficient balance or invalid amount.");
         }
     }
 }
@@ -71,6 +73,20 @@ class BankManagementSystem {
             throw new IllegalArgumentException("Invalid account number or PIN.");
         }
         return account;
+    }
+
+    public void deleteAccount(String accountNumber, String pin) {
+        BankAccount account = accounts.get(accountNumber);
+        if (account == null || !account.verifyPin(pin)) {
+            throw new IllegalArgumentException("Invalid account number or PIN.");
+        }
+
+        // Remove the account from the map
+        accounts.remove(accountNumber);
+
+        // Save the updated accounts to the file
+        saveAccounts();
+        System.out.println("Account deleted successfully.");
     }
 
     public void saveAccounts() {
@@ -105,7 +121,8 @@ public class SecureBankApp {
             System.out.println("2. Deposit Money");
             System.out.println("3. Withdraw Money");
             System.out.println("4. Check Balance");
-            System.out.println("5. Exit");
+            System.out.println("5. Delete Account");
+            System.out.println("6. Exit");
             System.out.print("Choose an option: ");
 
             int choice = scanner.nextInt();
@@ -117,7 +134,8 @@ public class SecureBankApp {
                     case 2 -> depositMoney();
                     case 3 -> withdrawMoney();
                     case 4 -> checkBalance();
-                    case 5 -> {
+                    case 5 -> deleteAccount();
+                    case 6 -> {
                         System.out.println("Exiting the system...");
                         return;
                     }
@@ -172,6 +190,19 @@ public class SecureBankApp {
     private static void checkBalance() {
         BankAccount account = authenticate();
         System.out.println("Your current balance: $" + account.getBalance());
+    }
+
+    private static void deleteAccount() {
+        System.out.print("Enter account number: ");
+        String accountNumber = scanner.nextLine();
+        System.out.print("Enter PIN: ");
+        String pin = scanner.nextLine();
+
+        try {
+            bankSystem.deleteAccount(accountNumber, pin);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
     }
 
     private static BankAccount authenticate() {
